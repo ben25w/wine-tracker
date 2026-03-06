@@ -96,13 +96,13 @@ async function handleSaveWine(db, request) {
         UPDATE wines 
         SET name = ?, type_id = ?, country = ?, region = ?, notes = ?, photo_url = ?
         WHERE id = ?
-      `).bind(name, type_id, country, region || null, notes || null, photo_url || null, id).run();
+      `).bind(name, type_id, country || null, region || null, notes || null, photo_url || null, id).run();
     } else {
       // Insert new wine
       await db.prepare(`
         INSERT INTO wines (name, type_id, country, region, notes, photo_url, created_at)
         VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-      `).bind(name, type_id, country, region || null, notes || null, photo_url || null).run();
+      `).bind(name, type_id, country || null, region || null, notes || null, photo_url || null).run();
     }
 
     return new Response(JSON.stringify({
