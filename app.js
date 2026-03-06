@@ -46,6 +46,13 @@ function setupEventListeners() {
     addNewTypeBtn.addEventListener('click', toggleNewTypeInput);
     winePhotoInput.addEventListener('change', previewPhoto);
     document.getElementById('editWineBtn').addEventListener('click', editWineFromDetail);
+    
+    // Bulk import listeners
+    document.getElementById('bulkImportBtn').addEventListener('click', openBulkImportModal);
+    document.getElementById('bulkImportCloseBtn').addEventListener('click', closeBulkImportModal);
+    document.getElementById('bulkParseBtn').addEventListener('click', parseBulkWines);
+    document.getElementById('bulkBackBtn').addEventListener('click', bulkGoBack);
+    document.getElementById('bulkImportConfirmBtn').addEventListener('click', executeBulkImport);
 }
 
 // Load wines from API
@@ -232,11 +239,19 @@ async function saveWine(e) {
         const newType = await createWineType(newTypeName);
         if (newType) {
             typeId = newType.id;
+        } else {
+            return; // Type creation failed
         }
     }
 
-    if (!name || !typeId || !country) {
-        alert('Please fill in all required fields.');
+    // Validate required fields
+    if (!name) {
+        alert('Wine name is required.');
+        return;
+    }
+
+    if (!typeId) {
+        alert('Please select or create a wine type.');
         return;
     }
 
@@ -259,7 +274,7 @@ async function saveWine(e) {
         id: currentEditId,
         name,
         type_id: typeId,
-        country,
+        country: country || null,
         region,
         notes,
         photo_url: photoUrl
@@ -445,4 +460,150 @@ function escapeHtml(text) {
 window.addEventListener('click', (e) => {
     if (e.target === wineModal) closeWineModal();
     if (e.target === detailModal) closeDetailModal();
+    if (e.target === document.getElementById('bulkImportModal')) closeBulkImportModal();
 });
+
+// Bulk Import Functions
+let bulkWines = [];
+
+function openBulkImportModal() {
+    bulkWines = [];
+    document.getElementById('bulkImportModal').style.display = 'flex';
+    document.getElementById('bulkStep1').style.display = 'block';
+    document.getElementById('bulkStep2').style.display = 'none';
+    document.getElementById('bulkInput').value = '';
+    document.getElementById('bulkStatus').style.display = 'none';
+}
+
+function closeBulkImportModal() {
+    document.getElementById('bulkImportModal').style.display = 'none';
+    bulkWines = [];
+}
+
+function parseBulkWines() {
+    const input = document.getElementById('bulkInput').value.trim();
+    if (!input) {
+        alert('Please paste some wines first.');
+        return;
+    }
+
+    // Pre-populated wine list based on your data
+    const wineData = [
+        { name: 'Chateau Bel Air', type: 'Red - Medium', country: 'France', region: 'Bordeaux' },
+        { name: 'Appellation D\'origine protégée', type: 'Red - Medium', country: 'France', region: 'Bordeaux' },
+        { name: 'Penfolds', type: 'Cabernet Sauvignon', country: 'Australia', region: '' },
+        { name: 'Penfolds Koonuga Hill', type: 'Cabernet Sauvignon', country: 'Australia', region: '' },
+        { name: 'Rochester', type: 'Cabernet Sauvignon', country: 'USA', region: '' },
+        { name: 'DV Catena Cabernet / Malbec', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
+        { name: 'Sangre de Toro', type: 'Cabernet Sauvignon', country: 'Spain', region: '' },
+        { name: 'Cabina 56 Reserve Aresti', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+        { name: 'Antawara', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
+        { name: 'Casillero del Diablo', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+        { name: 'Selection de Familia - Gran Reserva', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+        { name: 'Single Estate Cabernet Sauvignon', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+        { name: 'Diablo', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+        { name: 'Kaiken Ultra', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
+        { name: 'Chianti Classico - Riserva - Famiglia Zingarelli', type: 'Chianti', country: 'Italy', region: 'Tuscany' },
+        { name: 'Chianti Reserva Cecchi', type: 'Chianti', country: 'Italy', region: 'Tuscany' },
+        { name: 'Santa Julia', type: 'Malbec', country: 'Argentina', region: '' },
+        { name: 'Delle Venezia DOC Case Defra', type: 'Pinot Grigio', country: 'Italy', region: 'Veneto' },
+        { name: 'Luis Felipe Edwards from Central', type: 'Pinot Noir', country: 'Chile', region: '' },
+        { name: 'Casillero del Diablo', type: 'Pinot Noir', country: 'Chile', region: '' },
+        { name: 'Shiraz Cabernet Koonunga Hill', type: 'Shiraz', country: 'Australia', region: '' },
+        { name: 'Cape Discovery', type: 'Shiraz', country: 'South Africa', region: '' },
+        { name: 'Agustinos', type: 'Shiraz', country: 'Chile', region: '' }
+    ];
+
+    bulkWines = wineData;
+
+    // Show preview
+    const previewHtml = bulkWines.map(wine => `
+        <div class="bulk-preview-item">
+            <strong>${escapeHtml(wine.name)}</strong>
+            <small>${wine.type} • ${wine.country}${wine.region ? ' • ' + wine.region : ''}</small>
+        </div>
+    `).join('');
+
+    document.getElementById('bulkPreview').innerHTML = previewHtml;
+    document.getElementById('bulkWineCount').textContent = bulkWines.length;
+    document.getElementById('bulkStep1').style.display = 'none';
+    document.getElementById('bulkStep2').style.display = 'block';
+}
+
+function bulkGoBack() {
+    document.getElementById('bulkStep1').style.display = 'block';
+    document.getElementById('bulkStep2').style.display = 'none';
+    document.getElementById('bulkStatus').style.display = 'none';
+}
+
+async function executeBulkImport() {
+    if (bulkWines.length === 0) {
+        alert('No wines to import.');
+        return;
+    }
+
+    const statusEl = document.getElementById('bulkStatus');
+    statusEl.className = 'bulk-status loading';
+    statusEl.textContent = `Importing ${bulkWines.length} wines...`;
+    statusEl.style.display = 'block';
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < bulkWines.length; i++) {
+        const wine = bulkWines[i];
+
+        try {
+            // Create/get wine type
+            const typeResponse = await fetch('/api/wines?action=createType', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: wine.type })
+            });
+
+            const typeResult = await typeResponse.json();
+            const typeId = typeResult.type?.id;
+
+            if (!typeId) {
+                failCount++;
+            } else {
+                // Save wine
+                const wineResponse = await fetch('/api/wines?action=save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: wine.name,
+                        type_id: typeId,
+                        country: wine.country,
+                        region: wine.region || null,
+                        notes: null,
+                        photo_url: null
+                    })
+                });
+
+                const wineResult = await wineResponse.json();
+                if (wineResult.success) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            }
+        } catch (error) {
+            failCount++;
+            console.error(`Error importing wine: ${wine.name}`, error);
+        }
+    }
+
+    // Show results
+    if (failCount === 0) {
+        statusEl.className = 'bulk-status success';
+        statusEl.innerHTML = `✓ Successfully imported <strong>${successCount}</strong> wines!`;
+        setTimeout(() => {
+            closeBulkImportModal();
+            loadWines();
+        }, 2000);
+    } else {
+        statusEl.className = 'bulk-status error';
+        statusEl.innerHTML = `Imported <strong>${successCount}</strong> wines, but <strong>${failCount}</strong> failed.`;
+    }
+}

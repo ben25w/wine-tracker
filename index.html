@@ -11,9 +11,12 @@
         <!-- Header -->
         <header class="header">
             <h1>Wine Tracker</h1>
-            <button id="toggleViewBtn" class="toggle-view-btn" title="Toggle between list and grid view">
-                <span class="view-icon">⊞</span>
-            </button>
+            <div class="header-buttons">
+                <button id="bulkImportBtn" class="header-btn" title="Bulk import wines">Import</button>
+                <button id="toggleViewBtn" class="toggle-view-btn" title="Toggle between list and grid view">
+                    <span class="view-icon">⊞</span>
+                </button>
+            </div>
         </header>
 
         <!-- Filters and Search -->
@@ -68,7 +71,7 @@
                 <div class="form-group">
                     <label for="wineType">Type *</label>
                     <div class="type-input-group">
-                        <select id="wineType" required>
+                        <select id="wineType">
                             <option value="">Select type...</option>
                         </select>
                         <button type="button" id="addNewTypeBtn" class="add-type-btn" title="Add new wine type">+</button>
@@ -84,8 +87,8 @@
 
                 <!-- Country -->
                 <div class="form-group">
-                    <label for="wineCountry">Country *</label>
-                    <input type="text" id="wineCountry" required placeholder="e.g., France">
+                    <label for="wineCountry">Country</label>
+                    <input type="text" id="wineCountry" placeholder="e.g., France">
                 </div>
 
                 <!-- Region -->
@@ -132,6 +135,38 @@
                 <button id="editWineBtn" class="btn btn-primary">Edit</button>
                 <button id="closeDetailBtn" class="btn btn-secondary">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Bulk Import -->
+    <div id="bulkImportModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <button class="modal-close" id="bulkImportCloseBtn">&times;</button>
+            
+            <h2>Bulk Import Wines</h2>
+
+            <div id="bulkStep1" class="bulk-step">
+                <p class="bulk-instructions">Paste your wines below, one per line in this format:</p>
+                <code class="bulk-example">Wine Name | Type | Country | Region (optional)</code>
+                
+                <textarea id="bulkInput" class="bulk-textarea" placeholder="Chateau Bel Air | Red - Medium | France | Bordeaux&#10;Penfolds Koonuga Hill | Cabernet Sauvignon | Australia"></textarea>
+
+                <div class="form-buttons">
+                    <button type="button" id="bulkParseBtn" class="btn btn-primary">Preview</button>
+                </div>
+            </div>
+
+            <div id="bulkStep2" class="bulk-step" style="display: none;">
+                <p class="bulk-instructions"><strong id="bulkWineCount">0</strong> wines ready to import:</p>
+                <div class="bulk-preview" id="bulkPreview"></div>
+
+                <div class="form-buttons">
+                    <button type="button" id="bulkBackBtn" class="btn btn-secondary">Back</button>
+                    <button type="button" id="bulkImportConfirmBtn" class="btn btn-primary">Import All</button>
+                </div>
+            </div>
+
+            <div id="bulkStatus" class="bulk-status" style="display: none;"></div>
         </div>
     </div>
 

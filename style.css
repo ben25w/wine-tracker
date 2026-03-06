@@ -52,6 +52,29 @@ body {
     color: var(--primary);
 }
 
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.header-btn {
+    background: var(--accent);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    transition: background-color 0.2s;
+}
+
+.header-btn:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
 .toggle-view-btn {
     background: var(--accent);
     border: none;
@@ -521,4 +544,97 @@ body {
     .wine-name {
         font-size: 16px;
     }
+}
+
+/* Bulk Import Styles */
+.bulk-step {
+    margin-bottom: 20px;
+}
+
+.bulk-instructions {
+    margin-bottom: 12px;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.bulk-example {
+    display: block;
+    background: var(--neutral);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    color: var(--text-dark);
+    overflow-x: auto;
+}
+
+.bulk-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 13px;
+    min-height: 150px;
+    margin-bottom: 16px;
+}
+
+.bulk-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+}
+
+.bulk-preview {
+    background: var(--neutral);
+    border-radius: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.bulk-preview-item {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+
+.bulk-preview-item:last-child {
+    border-bottom: none;
+}
+
+.bulk-preview-item strong {
+    display: block;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.bulk-preview-item small {
+    color: var(--text-light);
+    display: block;
+}
+
+.bulk-status {
+    padding: 16px;
+    border-radius: 6px;
+    margin-top: 16px;
+}
+
+.bulk-status.success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.bulk-status.error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.bulk-status.loading {
+    background: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
 }
