@@ -487,34 +487,35 @@ function parseBulkWines() {
         return;
     }
 
-    // Pre-populated wine list based on your data
-    const wineData = [
-        { name: 'Chateau Bel Air', type: 'Red - Medium', country: 'France', region: 'Bordeaux' },
-        { name: 'Appellation D\'origine protégée', type: 'Red - Medium', country: 'France', region: 'Bordeaux' },
-        { name: 'Penfolds', type: 'Cabernet Sauvignon', country: 'Australia', region: '' },
-        { name: 'Penfolds Koonuga Hill', type: 'Cabernet Sauvignon', country: 'Australia', region: '' },
-        { name: 'Rochester', type: 'Cabernet Sauvignon', country: 'USA', region: '' },
-        { name: 'DV Catena Cabernet / Malbec', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
-        { name: 'Sangre de Toro', type: 'Cabernet Sauvignon', country: 'Spain', region: '' },
-        { name: 'Cabina 56 Reserve Aresti', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
-        { name: 'Antawara', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
-        { name: 'Casillero del Diablo', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
-        { name: 'Selection de Familia - Gran Reserva', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
-        { name: 'Single Estate Cabernet Sauvignon', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
-        { name: 'Diablo', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
-        { name: 'Kaiken Ultra', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
-        { name: 'Chianti Classico - Riserva - Famiglia Zingarelli', type: 'Chianti', country: 'Italy', region: 'Tuscany' },
-        { name: 'Chianti Reserva Cecchi', type: 'Chianti', country: 'Italy', region: 'Tuscany' },
-        { name: 'Santa Julia', type: 'Malbec', country: 'Argentina', region: '' },
-        { name: 'Delle Venezia DOC Case Defra', type: 'Pinot Grigio', country: 'Italy', region: 'Veneto' },
-        { name: 'Luis Felipe Edwards from Central', type: 'Pinot Noir', country: 'Chile', region: '' },
-        { name: 'Casillero del Diablo', type: 'Pinot Noir', country: 'Chile', region: '' },
-        { name: 'Shiraz Cabernet Koonunga Hill', type: 'Shiraz', country: 'Australia', region: '' },
-        { name: 'Cape Discovery', type: 'Shiraz', country: 'South Africa', region: '' },
-        { name: 'Agustinos', type: 'Shiraz', country: 'Chile', region: '' }
-    ];
+    bulkWines = [];
+    const lines = input.split('\n').filter(line => line.trim());
 
-    bulkWines = wineData;
+    // Parse each line: Wine Name | Type | Country | Region (optional)
+    lines.forEach(line => {
+        const parts = line.split('|').map(p => p.trim()).filter(p => p);
+        
+        if (parts.length >= 3) {
+            bulkWines.push({
+                name: parts[0],
+                type: parts[1],
+                country: parts[2],
+                region: parts[3] || ''
+            });
+        } else if (parts.length === 2) {
+            // If only 2 parts, assume Name and Type
+            bulkWines.push({
+                name: parts[0],
+                type: parts[1],
+                country: '',
+                region: ''
+            });
+        }
+    });
+
+    if (bulkWines.length === 0) {
+        alert('No wines could be parsed. Make sure each line follows: Wine Name | Type | Country | Region (optional)');
+        return;
+    }
 
     // Show preview
     const previewHtml = bulkWines.map(wine => `

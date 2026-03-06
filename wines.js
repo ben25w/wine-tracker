@@ -80,10 +80,10 @@ async function handleSaveWine(db, request) {
     const data = await request.json();
     const { id, name, type_id, country, region, notes, photo_url } = data;
 
-    if (!name || !type_id || !country) {
+    if (!name || !type_id) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Missing required fields'
+        error: 'Wine name and type are required'
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
