@@ -127,14 +127,14 @@ try {
     }
 
     const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-    const key = `wines/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const key = 'wines/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
     const arrayBuffer = await file.arrayBuffer();
 
     await env.WINES_R2.put(key, arrayBuffer, {
       httpMetadata: { contentType: file.type || 'image/jpeg' }
     });
 
-    const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+    const publicUrl = env.R2_PUBLIC_URL + '/' + key;
     return new Response(JSON.stringify({ success: true, url: publicUrl }), { headers: corsHeaders });
   }
 
