@@ -20,7 +20,7 @@
 
 html, body {
     font-family: 'Georgia', 'Garamond', serif;
-    background: linear-gradient(135deg, #0f0d0a 0%, #1a1410 50%, #2a1f18 100%);
+    background: linear-gradient(135deg, #faf8f3 0%, #f5ede3 50%, #ede3d9 100%);
     color: var(--text-primary);
     line-height: 1.7;
     min-height: 100vh;
@@ -43,15 +43,15 @@ body {
     align-items: center;
     margin-bottom: 40px;
     padding: 32px 0;
-    border-bottom: 1px solid var(--border-subtle);
-    background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
+    border-bottom: 2px solid var(--wine);
+    background: linear-gradient(to bottom, rgba(107, 45, 38, 0.04), transparent);
 }
 
 .header h1 {
     font-size: 42px;
     font-weight: 300;
     letter-spacing: 2px;
-    color: var(--cream);
+    color: var(--wine);
     text-transform: uppercase;
 }
 
