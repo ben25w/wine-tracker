@@ -2,8 +2,11 @@
 let wines = [];
 let wineTypes = [];
 let allCountries = [];
-let currentView = 'list'; // 'list' or 'grid'
+let currentView = 'list';
 let currentEditId = null;
+
+const STORAGE_WINES_KEY = 'wines_data';
+const STORAGE_TYPES_KEY = 'wine_types_data';
 
 // DOM Elements
 const wineContainer = document.getElementById('wineContainer');
@@ -32,7 +35,45 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
-// Event Listeners
+// Load wines from localStorage
+function loadWines() {
+    try {
+        const storedWines = localStorage.getItem(STORAGE_WINES_KEY);
+        const storedTypes = localStorage.getItem(STORAGE_TYPES_KEY);
+        
+        wines = storedWines ? JSON.parse(storedWines) : [];
+        wineTypes = storedTypes ? JSON.parse(storedTypes) : getDefaultTypes();
+        
+        allCountries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
+        populateFilterDropdowns();
+        renderWines();
+    } catch (error) {
+        console.error('Error loading wines:', error);
+        wineTypes = getDefaultTypes();
+    }
+}
+
+function getDefaultTypes() {
+    return [
+        { id: 1, name: 'Red - Light' },
+        { id: 2, name: 'Red - Medium' },
+        { id: 3, name: 'Red - Full' },
+        { id: 4, name: 'White - Crisp' },
+        { id: 5, name: 'White - Medium' },
+        { id: 6, name: 'White - Full' },
+        { id: 7, name: 'Rosé' },
+        { id: 8, name: 'Sparkling' },
+        { id: 9, name: 'Fortified' },
+        { id: 10, name: 'Dessert' }
+    ];
+}
+
+function saveWines() {
+    localStorage.setItem(STORAGE_WINES_KEY, JSON.stringify(wines));
+    localStorage.setItem(STORAGE_TYPES_KEY, JSON.stringify(wineTypes));
+}
+
+// Setup Event Listeners
 function setupEventListeners() {
     addWineBtn.addEventListener('click', openAddWineModal);
     modalCloseBtn.addEventListener('click', closeWineModal);
@@ -55,30 +96,8 @@ function setupEventListeners() {
     document.getElementById('bulkImportConfirmBtn').addEventListener('click', executeBulkImport);
 }
 
-// Load wines from API
-async function loadWines() {
-    try {
-        const response = await fetch('/api/wines?action=list');
-        const data = await response.json();
-
-        if (data.success) {
-            wines = data.wines || [];
-            wineTypes = data.types || [];
-            allCountries = [...new Set(wines.map(w => w.country).filter(Boolean))].sort();
-
-            populateFilterDropdowns();
-            renderWines();
-        } else {
-            console.error('Failed to load wines:', data.error);
-        }
-    } catch (error) {
-        console.error('Error loading wines:', error);
-    }
-}
-
 // Populate filter dropdowns
 function populateFilterDropdowns() {
-    // Populate types
     typeFilter.innerHTML = '<option value="">All Types</option>';
     wineTypes.forEach(type => {
         const option = document.createElement('option');
@@ -87,7 +106,6 @@ function populateFilterDropdowns() {
         typeFilter.appendChild(option);
     });
 
-    // Populate countries
     countryFilter.innerHTML = '<option value="">All Countries</option>';
     allCountries.forEach(country => {
         const option = document.createElement('option');
@@ -97,7 +115,7 @@ function populateFilterDropdowns() {
     });
 }
 
-// Render wines based on filters
+// Render wines
 function renderWines() {
     const searchTerm = searchInput.value.toLowerCase();
     const typeId = typeFilter.value;
@@ -107,7 +125,6 @@ function renderWines() {
         const matchesSearch = wine.name.toLowerCase().includes(searchTerm);
         const matchesType = !typeId || wine.type_id == typeId;
         const matchesCountry = !country || wine.country === country;
-
         return matchesSearch && matchesType && matchesCountry;
     });
 
@@ -132,7 +149,7 @@ function renderWines() {
                     <div class="wine-name">${escapeHtml(wine.name)}</div>
                     <div class="wine-meta">
                         <span class="wine-badge">${typeName}</span>
-                        <span class="wine-badge">${wine.country}</span>
+                        ${wine.country ? `<span class="wine-badge">${wine.country}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -140,12 +157,10 @@ function renderWines() {
     }).join('');
 }
 
-// Filter wines on input
 function filterWines() {
     renderWines();
 }
 
-// Toggle between list and grid view
 function toggleView() {
     currentView = currentView === 'list' ? 'grid' : 'list';
     if (currentView === 'grid') {
@@ -158,7 +173,6 @@ function toggleView() {
     renderWines();
 }
 
-// Open add wine modal
 function openAddWineModal() {
     currentEditId = null;
     modalTitle.textContent = 'Add Wine';
@@ -168,18 +182,15 @@ function openAddWineModal() {
     wineModal.style.display = 'flex';
 }
 
-// Close wine modal
 function closeWineModal() {
     wineModal.style.display = 'none';
     resetForm();
 }
 
-// Close detail modal
 function closeDetailModal() {
     detailModal.style.display = 'none';
 }
 
-// Reset form
 function resetForm() {
     wineForm.reset();
     photoPreview.style.display = 'none';
@@ -188,7 +199,6 @@ function resetForm() {
     currentEditId = null;
 }
 
-// Populate type dropdown
 function populateTypeDropdown() {
     const wineTypeSelect = document.getElementById('wineType');
     wineTypeSelect.innerHTML = '<option value="">Select type...</option>';
@@ -200,7 +210,6 @@ function populateTypeDropdown() {
     });
 }
 
-// Toggle new type input
 function toggleNewTypeInput() {
     const isHidden = newTypeInput.style.display === 'none';
     newTypeInput.style.display = isHidden ? 'block' : 'none';
@@ -209,7 +218,6 @@ function toggleNewTypeInput() {
     }
 }
 
-// Preview photo
 function previewPhoto(e) {
     const file = e.target.files[0];
     if (file) {
@@ -222,7 +230,7 @@ function previewPhoto(e) {
     }
 }
 
-// Save wine (add or edit)
+// Save wine
 async function saveWine(e) {
     e.preventDefault();
 
@@ -236,15 +244,14 @@ async function saveWine(e) {
     // Handle new type
     if (!typeId && newTypeInput.style.display !== 'none' && newTypeInput.value.trim()) {
         const newTypeName = newTypeInput.value.trim();
-        const newType = await createWineType(newTypeName);
+        const newType = createWineType(newTypeName);
         if (newType) {
             typeId = newType.id;
         } else {
-            return; // Type creation failed
+            return;
         }
     }
 
-    // Validate required fields
     if (!name) {
         alert('Wine name is required.');
         return;
@@ -255,7 +262,6 @@ async function saveWine(e) {
         return;
     }
 
-    // Upload photo if provided
     let photoUrl = null;
     if (currentEditId) {
         const wine = wines.find(w => w.id == currentEditId);
@@ -280,74 +286,50 @@ async function saveWine(e) {
         photo_url: photoUrl
     };
 
-    try {
-        const response = await fetch('/api/wines?action=save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(wineData)
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            loadWines();
-            closeWineModal();
-        } else {
-            alert('Failed to save wine: ' + result.error);
+    if (currentEditId) {
+        const index = wines.findIndex(w => w.id == currentEditId);
+        if (index >= 0) {
+            wines[index] = { ...wines[index], ...wineData };
         }
-    } catch (error) {
-        console.error('Error saving wine:', error);
-        alert('Error saving wine.');
+    } else {
+        const newWine = {
+            id: Math.max(...wines.map(w => w.id || 0), 0) + 1,
+            ...wineData,
+            created_at: new Date().toISOString()
+        };
+        wines.push(newWine);
     }
+
+    saveWines();
+    loadWines();
+    closeWineModal();
 }
 
-// Create new wine type
-async function createWineType(name) {
-    try {
-        const response = await fetch('/api/wines?action=createType', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name.trim() })
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            return result.type;
-        } else {
-            alert('Failed to create wine type: ' + result.error);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error creating wine type:', error);
-        alert('Error creating wine type.');
-        return null;
+function createWineType(name) {
+    const existing = wineTypes.find(t => t.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+        return existing;
     }
+
+    const newType = {
+        id: Math.max(...wineTypes.map(t => t.id || 0), 0) + 1,
+        name: name.trim()
+    };
+    wineTypes.push(newType);
+    saveWines();
+    return newType;
 }
 
-// Upload photo to R2
 async function uploadPhoto(file) {
-    try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch('/api/wines?action=uploadPhoto', {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            return result.url;
-        } else {
-            console.error('Upload failed:', result.error);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error uploading photo:', error);
-        return null;
-    }
+    const reader = new FileReader();
+    return new Promise((resolve) => {
+        reader.onload = (event) => {
+            resolve(event.target.result);
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
-// View wine details
 function viewWineDetail(id) {
     const wine = wines.find(w => w.id == id);
     if (!wine) return;
@@ -356,8 +338,10 @@ function viewWineDetail(id) {
 
     const detailContent = document.getElementById('detailContent');
     detailContent.innerHTML = `
-        ${wine.photo_url 
+        ${wine.photo_url && !wine.photo_url.startsWith('data:') 
             ? `<img src="${wine.photo_url}" alt="${wine.name}" class="detail-photo">` 
+            : wine.photo_url
+            ? `<img src="${wine.photo_url}" alt="${wine.name}" class="detail-photo">`
             : `<div class="detail-placeholder">🍷</div>`
         }
         
@@ -371,10 +355,12 @@ function viewWineDetail(id) {
             <div class="detail-value">${typeName}</div>
         </div>
 
-        <div class="detail-section">
-            <div class="detail-label">Country</div>
-            <div class="detail-value">${wine.country}</div>
-        </div>
+        ${wine.country ? `
+            <div class="detail-section">
+                <div class="detail-label">Country</div>
+                <div class="detail-value">${wine.country}</div>
+            </div>
+        ` : ''}
 
         ${wine.region ? `
             <div class="detail-section">
@@ -395,7 +381,6 @@ function viewWineDetail(id) {
     detailModal.style.display = 'flex';
 }
 
-// Edit wine from detail view
 function editWineFromDetail() {
     const wineId = this.dataset.wineId;
     const wine = wines.find(w => w.id == wineId);
@@ -407,7 +392,7 @@ function editWineFromDetail() {
 
     document.getElementById('wineName').value = wine.name;
     document.getElementById('wineType').value = wine.type_id;
-    document.getElementById('wineCountry').value = wine.country;
+    document.getElementById('wineCountry').value = wine.country || '';
     document.getElementById('wineRegion').value = wine.region || '';
     document.getElementById('wineNotes').value = wine.notes || '';
 
@@ -421,49 +406,32 @@ function editWineFromDetail() {
     wineModal.style.display = 'flex';
 }
 
-// Delete wine
-async function deleteWine(e) {
+function deleteWine(e) {
     e.preventDefault();
     if (!currentEditId) return;
 
     const confirmed = confirm('Are you sure you want to delete this wine?');
     if (!confirmed) return;
 
-    try {
-        const response = await fetch('/api/wines?action=delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: currentEditId })
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            loadWines();
-            closeWineModal();
-        } else {
-            alert('Failed to delete wine: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Error deleting wine:', error);
-        alert('Error deleting wine.');
-    }
+    wines = wines.filter(w => w.id != currentEditId);
+    saveWines();
+    loadWines();
+    closeWineModal();
 }
 
-// Utility: Escape HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// Close modals on outside click
 window.addEventListener('click', (e) => {
     if (e.target === wineModal) closeWineModal();
     if (e.target === detailModal) closeDetailModal();
     if (e.target === document.getElementById('bulkImportModal')) closeBulkImportModal();
 });
 
-// Bulk Import Functions
+// Bulk Import
 let bulkWines = [];
 
 function openBulkImportModal() {
@@ -490,38 +458,28 @@ function parseBulkWines() {
     bulkWines = [];
     const lines = input.split('\n').filter(line => line.trim());
 
-    // Parse each line: Wine Name | Type | Country | Region (optional)
     lines.forEach(line => {
         const parts = line.split('|').map(p => p.trim()).filter(p => p);
         
-        if (parts.length >= 3) {
+        if (parts.length >= 2) {
             bulkWines.push({
                 name: parts[0],
                 type: parts[1],
-                country: parts[2],
+                country: parts[2] || '',
                 region: parts[3] || ''
-            });
-        } else if (parts.length === 2) {
-            // If only 2 parts, assume Name and Type
-            bulkWines.push({
-                name: parts[0],
-                type: parts[1],
-                country: '',
-                region: ''
             });
         }
     });
 
     if (bulkWines.length === 0) {
-        alert('No wines could be parsed. Make sure each line follows: Wine Name | Type | Country | Region (optional)');
+        alert('No wines could be parsed.');
         return;
     }
 
-    // Show preview
     const previewHtml = bulkWines.map(wine => `
         <div class="bulk-preview-item">
             <strong>${escapeHtml(wine.name)}</strong>
-            <small>${wine.type} • ${wine.country}${wine.region ? ' • ' + wine.region : ''}</small>
+            <small>${wine.type}${wine.country ? ' • ' + wine.country : ''}${wine.region ? ' • ' + wine.region : ''}</small>
         </div>
     `).join('');
 
@@ -537,84 +495,47 @@ function bulkGoBack() {
     document.getElementById('bulkStatus').style.display = 'none';
 }
 
-async function executeBulkImport() {
+function executeBulkImport() {
     if (bulkWines.length === 0) {
         alert('No wines to import.');
         return;
     }
 
     const statusEl = document.getElementById('bulkStatus');
-    statusEl.className = 'bulk-status loading';
-    statusEl.textContent = `Importing ${bulkWines.length} wines...`;
+    let successCount = 0;
+
+    bulkWines.forEach(wine => {
+        // Create type if needed
+        let typeId = wineTypes.find(t => t.name.toLowerCase() === wine.type.toLowerCase())?.id;
+        
+        if (!typeId) {
+            const newType = createWineType(wine.type);
+            typeId = newType.id;
+        }
+
+        // Add wine
+        const newWine = {
+            id: Math.max(...wines.map(w => w.id || 0), 0) + 1,
+            name: wine.name,
+            type_id: typeId,
+            country: wine.country || null,
+            region: wine.region || null,
+            notes: null,
+            photo_url: null,
+            created_at: new Date().toISOString()
+        };
+        wines.push(newWine);
+        successCount++;
+    });
+
+    saveWines();
+    
+    statusEl.className = 'bulk-status success';
+    statusEl.innerHTML = `✓ Successfully imported <strong>${successCount}</strong> wines!`;
     statusEl.style.display = 'block';
 
-    let successCount = 0;
-    let failCount = 0;
-    const errors = [];
-
-    for (let i = 0; i < bulkWines.length; i++) {
-        const wine = bulkWines[i];
-
-        try {
-            // Create/get wine type
-            const typeResponse = await fetch('/api/wines?action=createType', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: wine.type })
-            });
-
-            const typeResult = await typeResponse.json();
-            
-            if (!typeResult.success || !typeResult.type?.id) {
-                failCount++;
-                errors.push(`${wine.name}: Failed to create/get type "${wine.type}"`);
-                console.error(`Type creation failed for ${wine.name}:`, typeResult);
-                continue;
-            }
-
-            const typeId = typeResult.type.id;
-
-            // Save wine
-            const wineResponse = await fetch('/api/wines?action=save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: wine.name,
-                    type_id: typeId,
-                    country: wine.country || null,
-                    region: wine.region || null,
-                    notes: null,
-                    photo_url: null
-                })
-            });
-
-            const wineResult = await wineResponse.json();
-            if (wineResult.success) {
-                successCount++;
-            } else {
-                failCount++;
-                errors.push(`${wine.name}: ${wineResult.error}`);
-                console.error(`Wine save failed for ${wine.name}:`, wineResult);
-            }
-        } catch (error) {
-            failCount++;
-            errors.push(`${wine.name}: ${error.message}`);
-            console.error(`Error importing wine: ${wine.name}`, error);
-        }
-    }
-
-    // Show results
-    if (failCount === 0) {
-        statusEl.className = 'bulk-status success';
-        statusEl.innerHTML = `✓ Successfully imported <strong>${successCount}</strong> wines!`;
-        setTimeout(() => {
-            closeBulkImportModal();
-            loadWines();
-        }, 2000);
-    } else {
-        statusEl.className = 'bulk-status error';
-        const errorPreview = errors.slice(0, 3).join('<br>');
-        statusEl.innerHTML = `Imported <strong>${successCount}</strong> wines, but <strong>${failCount}</strong> failed.<br><small>${errorPreview}${errors.length > 3 ? '<br>...' : ''}</small>`;
-        console.log('All errors:', errors);
-    }
+    setTimeout(() => {
+        closeBulkImportModal();
+        loadWines();
+    }, 1500);
 }
