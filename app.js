@@ -4,6 +4,7 @@ let wineTypes = [];
 let allCountries = [];
 let currentView = 'list';
 let currentEditId = null;
+let currentSort = 'date-newest';
 
 const STORAGE_WINES_KEY = 'wines_data';
 const STORAGE_TYPES_KEY = 'wine_types_data';
@@ -83,6 +84,10 @@ function setupEventListeners() {
     searchInput.addEventListener('input', filterWines);
     typeFilter.addEventListener('change', filterWines);
     countryFilter.addEventListener('change', filterWines);
+    document.getElementById('sortFilter').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        filterWines();
+    });
     toggleViewBtn.addEventListener('click', toggleView);
     addNewTypeBtn.addEventListener('click', toggleNewTypeInput);
     winePhotoInput.addEventListener('change', previewPhoto);
@@ -126,6 +131,22 @@ function renderWines() {
         const matchesType = !typeId || wine.type_id == typeId;
         const matchesCountry = !country || wine.country === country;
         return matchesSearch && matchesType && matchesCountry;
+    });
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+        switch(currentSort) {
+            case 'date-newest':
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+            case 'date-oldest':
+                return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+            case 'alpha-az':
+                return a.name.localeCompare(b.name);
+            case 'alpha-za':
+                return b.name.localeCompare(a.name);
+            default:
+                return 0;
+        }
     });
 
     if (filtered.length === 0) {
