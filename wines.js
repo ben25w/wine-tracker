@@ -159,9 +159,9 @@ async function handleDeleteWine(db, request) {
 async function handleCreateType(db, request) {
   try {
     const data = await request.json();
-    const { name } = data;
+    const name = data.name ? data.name.trim() : null;
 
-    if (!name || !name.trim()) {
+    if (!name) {
       return new Response(JSON.stringify({
         success: false,
         error: 'Type name is required'
@@ -171,10 +171,28 @@ async function handleCreateType(db, request) {
       });
     }
 
+    // Check if type already exists
+    const existingResult = await db.prepare(`
+      SELECT id FROM wine_types WHERE name = ?
+    `).bind(name).first();
+
+    if (existingResult) {
+      return new Response(JSON.stringify({
+        success: true,
+        type: {
+          id: existingResult.id,
+          name: existingResult.name
+        }
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Create new type
     const result = await db.prepare(`
       INSERT INTO wine_types (name)
       VALUES (?)
-    `).bind(name.trim()).run();
+    `).bind(name).run();
 
     const typeId = result.meta.last_row_id;
 
@@ -182,12 +200,13 @@ async function handleCreateType(db, request) {
       success: true,
       type: {
         id: typeId,
-        name: name.trim()
+        name: name
       }
     }), {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    console.error('Error creating type:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message

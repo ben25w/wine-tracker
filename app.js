@@ -550,6 +550,7 @@ async function executeBulkImport() {
 
     let successCount = 0;
     let failCount = 0;
+    const errors = [];
 
     for (let i = 0; i < bulkWines.length; i++) {
         const wine = bulkWines[i];
@@ -563,34 +564,41 @@ async function executeBulkImport() {
             });
 
             const typeResult = await typeResponse.json();
-            const typeId = typeResult.type?.id;
-
-            if (!typeId) {
+            
+            if (!typeResult.success || !typeResult.type?.id) {
                 failCount++;
-            } else {
-                // Save wine
-                const wineResponse = await fetch('/api/wines?action=save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: wine.name,
-                        type_id: typeId,
-                        country: wine.country,
-                        region: wine.region || null,
-                        notes: null,
-                        photo_url: null
-                    })
-                });
+                errors.push(`${wine.name}: Failed to create/get type "${wine.type}"`);
+                console.error(`Type creation failed for ${wine.name}:`, typeResult);
+                continue;
+            }
 
-                const wineResult = await wineResponse.json();
-                if (wineResult.success) {
-                    successCount++;
-                } else {
-                    failCount++;
-                }
+            const typeId = typeResult.type.id;
+
+            // Save wine
+            const wineResponse = await fetch('/api/wines?action=save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: wine.name,
+                    type_id: typeId,
+                    country: wine.country || null,
+                    region: wine.region || null,
+                    notes: null,
+                    photo_url: null
+                })
+            });
+
+            const wineResult = await wineResponse.json();
+            if (wineResult.success) {
+                successCount++;
+            } else {
+                failCount++;
+                errors.push(`${wine.name}: ${wineResult.error}`);
+                console.error(`Wine save failed for ${wine.name}:`, wineResult);
             }
         } catch (error) {
             failCount++;
+            errors.push(`${wine.name}: ${error.message}`);
             console.error(`Error importing wine: ${wine.name}`, error);
         }
     }
@@ -605,6 +613,8 @@ async function executeBulkImport() {
         }, 2000);
     } else {
         statusEl.className = 'bulk-status error';
-        statusEl.innerHTML = `Imported <strong>${successCount}</strong> wines, but <strong>${failCount}</strong> failed.`;
+        const errorPreview = errors.slice(0, 3).join('<br>');
+        statusEl.innerHTML = `Imported <strong>${successCount}</strong> wines, but <strong>${failCount}</strong> failed.<br><small>${errorPreview}${errors.length > 3 ? '<br>...' : ''}</small>`;
+        console.log('All errors:', errors);
     }
 }
