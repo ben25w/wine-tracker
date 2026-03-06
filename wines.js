@@ -80,6 +80,8 @@ async function handleSaveWine(db, request) {
     const data = await request.json();
     const { id, name, type_id, country, region, notes, photo_url } = data;
 
+    console.log('Saving wine:', { id, name, type_id, country, region, notes, photo_url });
+
     if (!name || !type_id) {
       return new Response(JSON.stringify({
         success: false,
@@ -90,34 +92,39 @@ async function handleSaveWine(db, request) {
       });
     }
 
+    // Ensure type_id is a number
+    const typeIdNum = parseInt(type_id, 10);
+    if (isNaN(typeIdNum)) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Invalid type_id'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const countryVal = country && typeof country === 'string' && country.trim() ? country.trim() : 'Unknown';
+    const regionVal = region && typeof region === 'string' && region.trim() ? region.trim() : null;
+    const notesVal = notes && typeof notes === 'string' && notes.trim() ? notes.trim() : null;
+    const urlVal = photo_url && typeof photo_url === 'string' ? photo_url : null;
+
     if (id) {
       // Update existing wine
+      const idNum = parseInt(id, 10);
+      console.log('Updating wine with:', { name, typeIdNum, countryVal, regionVal, notesVal, urlVal, idNum });
       await db.prepare(`
         UPDATE wines 
         SET name = ?, type_id = ?, country = ?, region = ?, notes = ?, photo_url = ?
         WHERE id = ?
-      `).bind(
-        name, 
-        type_id, 
-        country && country.trim() ? country.trim() : 'Unknown',
-        region && region.trim() ? region.trim() : null,
-        notes && notes.trim() ? notes.trim() : null,
-        photo_url || null,
-        id
-      ).run();
+      `).bind(name, typeIdNum, countryVal, regionVal, notesVal, urlVal, idNum).run();
     } else {
       // Insert new wine
+      console.log('Inserting wine with:', { name, typeIdNum, countryVal, regionVal, notesVal, urlVal });
       await db.prepare(`
         INSERT INTO wines (name, type_id, country, region, notes, photo_url, created_at)
         VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-      `).bind(
-        name,
-        type_id,
-        country && country.trim() ? country.trim() : 'Unknown',
-        region && region.trim() ? region.trim() : null,
-        notes && notes.trim() ? notes.trim() : null,
-        photo_url || null
-      ).run();
+      `).bind(name, typeIdNum, countryVal, regionVal, notesVal, urlVal).run();
     }
 
     return new Response(JSON.stringify({
@@ -126,6 +133,7 @@ async function handleSaveWine(db, request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    console.error('Save wine error:', error);
     return new Response(JSON.stringify({
       success: false,
       error: error.message
