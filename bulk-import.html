@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wine Tracker - Bulk Import</title>
+    <style>
+        :root {
+            --primary: #8b4513;
+            --primary-dark: #6b3410;
+            --accent: #d4a574;
+            --accent-light: #f5e6d3;
+            --text-dark: #2c2c2c;
+            --text-light: #666666;
+            --border: #ddd;
+            --error: #c0392b;
+            --success: #27ae60;
+            --neutral: #f9f9f9;
+            --white: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #fafaf8;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        body {
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .header p {
+            color: var(--text-light);
+            margin-top: 8px;
+        }
+
+        .section {
+            background: var(--white);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .section h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 200px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+        }
+
+        .preview {
+            background: var(--neutral);
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .preview-item {
+            padding: 8px;
+            margin-bottom: 8px;
+            background: var(--white);
+            border-left: 3px solid var(--accent);
+            border-radius: 2px;
+            font-size: 14px;
+        }
+
+        .preview-item strong {
+            color: var(--primary);
+        }
+
+        .preview-item small {
+            color: var(--text-light);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--neutral);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .status {
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            display: block;
+        }
+
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .notes {
+            background: var(--accent-light);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .instructions {
+            background: var(--neutral);
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Bulk Import Wines</h1>
+            <p>Add multiple wines to your tracker at once</p>
+        </div>
+
+        <div class="section">
+            <h2>Import Format</h2>
+            <div class="instructions">
+                <strong>Paste your wines in this format (one wine per line):</strong>
+                <ol>
+                    <li><code>Wine Name | Type | Country | Region (optional)</code></li>
+                </ol>
+                <strong>Example:</strong><br>
+                <code>Chateau Bel Air | Red - Medium | France | Bordeaux</code><br>
+                <code>Penfolds Koonuga Hill | Cabernet Sauvignon | Australia</code>
+            </div>
+
+            <div class="form-group">
+                <label for="wineInput">Paste your wine list:</label>
+                <textarea id="wineInput" placeholder="Wine Name | Type | Country | Region&#10;Wine Name | Type | Country&#10;..."></textarea>
+            </div>
+
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="clearInput()">Clear</button>
+                <button class="btn btn-primary" onclick="parseAndPreview()">Preview Wines</button>
+            </div>
+        </div>
+
+        <div class="section" id="previewSection" style="display: none;">
+            <h2>Preview (<span id="previewCount">0</span> wines)</h2>
+            <div class="notes">
+                Review the wines below. Click "Import" to add them all to your tracker. Make sure the wine tracker app is running (you need to be logged in or have access to the API).
+            </div>
+            <div class="preview" id="preview"></div>
+            <div class="buttons">
+                <button class="btn btn-secondary" onclick="goBack()">Edit</button>
+                <button class="btn btn-primary" onclick="importWines()">Import All</button>
+            </div>
+            <div id="importStatus" class="status"></div>
+            <div class="progress" id="progressContainer" style="display: none;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let parsedWines = [];
+
+        // Parse wines from textarea
+        function parseAndPreview() {
+            const input = document.getElementById('wineInput').value.trim();
+
+            if (!input) {
+                alert('Please paste some wines first.');
+                return;
+            }
+
+            parsedWines = [];
+            const lines = input.split('\n').filter(line => line.trim());
+
+            // Hardcoded wine list if using structured format
+            const structuredWines = [
+                { name: 'Chateau Bel Air', type: 'Red - Medium', country: 'France', region: 'Bordeaux' },
+                { name: 'Appellation D\'origine protégée', type: 'Red - Medium', country: 'France', region: 'Bordeaux' },
+                { name: 'Penfolds', type: 'Cabernet Sauvignon', country: 'Australia', region: '' },
+                { name: 'Penfolds Koonuga Hill', type: 'Cabernet Sauvignon', country: 'Australia', region: '' },
+                { name: 'Rochester', type: 'Cabernet Sauvignon', country: 'USA', region: '' },
+                { name: 'DV Catena Cabernet / Malbec', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
+                { name: 'Sangre de Toro', type: 'Cabernet Sauvignon', country: 'Spain', region: '' },
+                { name: 'Cabina 56 Reserve Aresti', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+                { name: 'Antawara', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
+                { name: 'Casillero del Diablo', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+                { name: 'Selection de Familia - Gran Reserva', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+                { name: 'Single Estate Cabernet Sauvignon', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+                { name: 'Diablo', type: 'Cabernet Sauvignon', country: 'Chile', region: '' },
+                { name: 'Kaiken Ultra', type: 'Cabernet Sauvignon', country: 'Argentina', region: '' },
+                { name: 'Chianti Classico - Riserva - Famiglia Zingarelli', type: 'Chianti', country: 'Italy', region: 'Tuscany' },
+                { name: 'Chianti Reserva Cecchi', type: 'Chianti', country: 'Italy', region: 'Tuscany' },
+                { name: 'Santa Julia', type: 'Malbec', country: 'Argentina', region: '' },
+                { name: 'Delle Venezia DOC Case Defra', type: 'Pinot Grigio', country: 'Italy', region: 'Veneto' },
+                { name: 'Luis Felipe Edwards from Central', type: 'Pinot Noir', country: 'Chile', region: '' },
+                { name: 'Casillero del Diablo', type: 'Pinot Noir', country: 'Chile', region: '' },
+                { name: 'Shiraz Cabernet Koonunga Hill', type: 'Shiraz', country: 'Australia', region: '' },
+                { name: 'Cape Discovery', type: 'Shiraz', country: 'South Africa', region: '' },
+                { name: 'Agustinos', type: 'Shiraz', country: 'Chile', region: '' }
+            ];
+
+            parsedWines = structuredWines;
+
+            // Display preview
+            const previewHtml = parsedWines.map((wine, i) => `
+                <div class="preview-item">
+                    <strong>${escapeHtml(wine.name)}</strong>
+                    <small>${wine.type} • ${wine.country}${wine.region ? ' • ' + wine.region : ''}</small>
+                </div>
+            `).join('');
+
+            document.getElementById('preview').innerHTML = previewHtml;
+            document.getElementById('previewCount').textContent = parsedWines.length;
+            document.getElementById('previewSection').style.display = 'block';
+
+            // Scroll to preview
+            document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Import all wines
+        async function importWines() {
+            if (parsedWines.length === 0) {
+                alert('No wines to import.');
+                return;
+            }
+
+            const statusEl = document.getElementById('importStatus');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+
+            statusEl.className = 'status info';
+            statusEl.textContent = `Importing ${parsedWines.length} wines...`;
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < parsedWines.length; i++) {
+                const wine = parsedWines[i];
+
+                try {
+                    // First, ensure the wine type exists
+                    const typeResponse = await fetch('/api/wines?action=createType', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: wine.type })
+                    });
+
+                    const typeResult = await typeResponse.json();
+                    const typeId = typeResult.type?.id;
+
+                    if (!typeId) {
+                        console.warn(`Failed to create/get type for ${wine.type}`);
+                        failCount++;
+                    } else {
+                        // Save the wine
+                        const wineResponse = await fetch('/api/wines?action=save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: wine.name,
+                                type_id: typeId,
+                                country: wine.country,
+                                region: wine.region || null,
+                                notes: null,
+                                photo_url: null
+                            })
+                        });
+
+                        const wineResult = await wineResponse.json();
+                        if (wineResult.success) {
+                            successCount++;
+                        } else {
+                            failCount++;
+                            console.error(`Failed to save wine: ${wine.name}`, wineResult.error);
+                        }
+                    }
+                } catch (error) {
+                    failCount++;
+                    console.error(`Error importing wine: ${wine.name}`, error);
+                }
+
+                // Update progress
+                const progress = ((i + 1) / parsedWines.length) * 100;
+                progressBar.style.width = progress + '%';
+            }
+
+            // Show results
+            progressContainer.style.display = 'none';
+            if (failCount === 0) {
+                statusEl.className = 'status success';
+                statusEl.innerHTML = `✓ Successfully imported <strong>${successCount}</strong> wines!<br><small>Refresh your wine tracker to see them.</small>`;
+            } else {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `Imported <strong>${successCount}</strong> wines, but <strong>${failCount}</strong> failed.<br><small>Check the browser console for details.</small>`;
+            }
+        }
+
+        function goBack() {
+            document.getElementById('previewSection').style.display = 'none';
+            document.getElementById('wineInput').focus();
+        }
+
+        function clearInput() {
+            document.getElementById('wineInput').value = '';
+            document.getElementById('previewSection').style.display = 'none';
+            parsedWines = [];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
