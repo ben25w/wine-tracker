@@ -8,172 +8,96 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <header class="header">
             <h1>Wine Tracker</h1>
             <div class="header-buttons">
-                <button id="bulkImportBtn" class="header-btn" title="Bulk import wines">Import</button>
                 <button id="toggleViewBtn" class="toggle-view-btn" title="Toggle between list and grid view">
                     <span class="view-icon">⊞</span>
                 </button>
             </div>
         </header>
 
-        <!-- Filters and Search -->
         <div class="controls-section">
-            <input 
-                type="text" 
-                id="searchInput" 
-                class="search-box" 
-                placeholder="Search wines by name..."
-            >
-            
+            <input type="text" id="searchInput" class="search-box" placeholder="Search wines by name…">
             <div class="filter-group">
                 <select id="typeFilter" class="filter-select">
                     <option value="">All Types</option>
                 </select>
-                
                 <select id="countryFilter" class="filter-select">
                     <option value="">All Countries</option>
                 </select>
-
                 <select id="sortFilter" class="sort-select">
-                    <option value="date-newest">Recently Added</option>
-                    <option value="date-oldest">Oldest First</option>
                     <option value="alpha-az">Name (A–Z)</option>
                     <option value="alpha-za">Name (Z–A)</option>
+                    <option value="date-newest">Recently Added</option>
+                    <option value="date-oldest">Oldest First</option>
                 </select>
             </div>
         </div>
 
-        <!-- Add Wine Button -->
         <button id="addWineBtn" class="add-wine-btn">+ Add Wine</button>
 
-        <!-- Wine List/Grid -->
-        <div id="wineContainer" class="wine-list">
-            <!-- Wines will be inserted here -->
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <p>No wines yet. Start by adding one!</p>
-        </div>
+        <div id="wineContainer" class="wine-list"></div>
+        <div id="emptyState" class="empty-state" style="display: none;"></div>
     </div>
 
     <!-- Modal: Add/Edit Wine -->
     <div id="wineModal" class="modal" style="display: none;">
         <div class="modal-content">
             <button class="modal-close" id="modalCloseBtn">&times;</button>
-            
             <h2 id="modalTitle">Add Wine</h2>
-
             <form id="wineForm">
-                <!-- Wine Name -->
                 <div class="form-group">
                     <label for="wineName">Wine Name *</label>
                     <input type="text" id="wineName" required placeholder="e.g., Côtes de Nuits 2019">
                 </div>
-
-                <!-- Wine Type -->
                 <div class="form-group">
                     <label for="wineType">Type *</label>
                     <div class="type-input-group">
                         <select id="wineType">
-                            <option value="">Select type...</option>
+                            <option value="">Select type…</option>
                         </select>
                         <button type="button" id="addNewTypeBtn" class="add-type-btn" title="Add new wine type">+</button>
                     </div>
-                    <input 
-                        type="text" 
-                        id="newTypeInput" 
-                        class="new-type-input" 
-                        placeholder="New type name"
-                        style="display: none;"
-                    >
+                    <input type="text" id="newTypeInput" class="new-type-input" placeholder="New type name" style="display: none;">
                 </div>
-
-                <!-- Country -->
                 <div class="form-group">
                     <label for="wineCountry">Country</label>
                     <input type="text" id="wineCountry" placeholder="e.g., France">
                 </div>
-
-                <!-- Region -->
                 <div class="form-group">
                     <label for="wineRegion">Region</label>
                     <input type="text" id="wineRegion" placeholder="e.g., Burgundy">
                 </div>
-
-                <!-- Notes -->
                 <div class="form-group">
                     <label for="wineNotes">Notes</label>
-                    <textarea id="wineNotes" placeholder="Tasting notes, impressions, etc."></textarea>
+                    <textarea id="wineNotes" placeholder="Tasting notes, impressions…"></textarea>
                 </div>
-
-                <!-- Photo -->
                 <div class="form-group">
                     <label for="winePhoto">Photo</label>
-                    <input type="file" id="winePhoto" accept="image/jpeg,image/png">
-                    <small>JPEG or PNG, optional</small>
+                    <input type="file" id="winePhoto" accept="image/jpeg,image/png,image/webp">
+                    <small>JPEG, PNG or WebP — optional</small>
                     <div id="photoPreview" style="display: none; margin-top: 10px;">
                         <img id="previewImg" src="" alt="Preview" style="max-width: 150px; border-radius: 4px;">
                     </div>
                 </div>
-
-                <!-- Form Buttons -->
                 <div class="form-buttons">
                     <button type="submit" class="btn btn-primary">Save Wine</button>
-                    <button type="button" id="deleteWineBtn" class="btn btn-danger" style="display: none;">Delete Wine</button>
+                    <button type="button" id="deleteWineBtn" class="btn btn-danger" style="display: none;">Delete</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal: Wine Details -->
+    <!-- Modal: Wine Detail -->
     <div id="detailModal" class="modal" style="display: none;">
         <div class="modal-content modal-detail">
             <button class="modal-close" id="detailCloseBtn">&times;</button>
-            
-            <div id="detailContent">
-                <!-- Details will be inserted here -->
-            </div>
-
+            <div id="detailContent"></div>
             <div class="detail-buttons">
                 <button id="editWineBtn" class="btn btn-primary">Edit</button>
                 <button id="closeDetailBtn" class="btn btn-secondary">Close</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal: Bulk Import -->
-    <div id="bulkImportModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <button class="modal-close" id="bulkImportCloseBtn">&times;</button>
-            
-            <h2>Bulk Import Wines</h2>
-
-            <div id="bulkStep1" class="bulk-step">
-                <p class="bulk-instructions">Paste your wines below, one per line in this format:</p>
-                <code class="bulk-example">Wine Name | Type | Country | Region (optional)</code>
-                
-                <textarea id="bulkInput" class="bulk-textarea" placeholder="Chateau Bel Air | Red - Medium | France | Bordeaux&#10;Penfolds Koonuga Hill | Cabernet Sauvignon | Australia"></textarea>
-
-                <div class="form-buttons">
-                    <button type="button" id="bulkParseBtn" class="btn btn-primary">Preview</button>
-                </div>
-            </div>
-
-            <div id="bulkStep2" class="bulk-step" style="display: none;">
-                <p class="bulk-instructions"><strong id="bulkWineCount">0</strong> wines ready to import:</p>
-                <div class="bulk-preview" id="bulkPreview"></div>
-
-                <div class="form-buttons">
-                    <button type="button" id="bulkBackBtn" class="btn btn-secondary">Back</button>
-                    <button type="button" id="bulkImportConfirmBtn" class="btn btn-primary">Import All</button>
-                </div>
-            </div>
-
-            <div id="bulkStatus" class="bulk-status" style="display: none;"></div>
         </div>
     </div>
 
