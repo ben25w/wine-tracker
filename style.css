@@ -830,3 +830,19 @@ body {
         font-size: 15px;
     }
 }
+
+/* Region badge — slightly muted */
+.wine-badge-region {
+    background: rgba(107, 92, 78, 0.08);
+    border-color: rgba(107, 92, 78, 0.18);
+    color: var(--text-secondary);
+}
+
+/* Notes in detail view use body font, not serif */
+.detail-notes {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
